@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CO₂-Vergleich Gaskraftwerk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gruen:#1E5A2B; --hellgruen:#6DB33F; --zartgruen:#D7F0C8; --rot:#CD281E;
+  --text:#232826; --muted:#5b6560; --bg:#f3f6f2; --card:#ffffff; --line:#dde5dc;
+  --soft:#eef4ec; --shadow:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(30,90,43,.07);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;padding-bottom:64px}
+.gk{color:var(--rot);font-weight:800}
+a{color:var(--gruen)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+
+/* Kopfleiste */
+header.kopf{background:#fff;border-bottom:5px solid var(--hellgruen);text-align:center;padding:18px 16px 14px}
+.kopf h1{margin:0;font-weight:900;font-size:clamp(22px,4.2vw,40px);letter-spacing:.02em;line-height:1.1}
+.kopf h1 .r{color:var(--rot)} .kopf h1 .g{color:var(--gruen)}
+.kopf .trenn{width:min(560px,80%);height:2px;background:var(--gruen);margin:10px auto}
+.kopf h2{margin:0;font-weight:800;font-size:clamp(16px,2.4vw,24px)}
+
+/* Layout */
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px;margin-top:20px}
+@media (max-width:880px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:var(--shadow);min-width:0}
+.card h3{margin:0 0 12px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800}
+.hint{font-size:13px;color:var(--muted)}
+.tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;padding:2px 8px;border-radius:99px;background:#fff3d6;color:#7a5200;vertical-align:middle}
+.tag.q{background:var(--zartgruen);color:var(--gruen)}
+
+/* Kraftwerk */
+.kw{display:flex;gap:18px;align-items:center}
+.kw svg{flex:0 0 auto;width:110px;height:auto}
+.big{font-weight:900;font-size:clamp(34px,5.2vw,52px);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.unit{font-weight:800;font-size:15px;color:var(--muted)}
+.delta{display:inline-block;margin-top:8px;font-weight:800;font-size:14px;padding:3px 10px;border-radius:99px;background:var(--soft);font-variant-numeric:tabular-nums;transition:background .3s,color .3s}
+.delta.plus{background:#fde6e4;color:var(--rot)} .delta.minus{background:var(--zartgruen);color:var(--gruen)}
+
+.base-mark{position:relative;height:20px;margin-top:16px}
+.base-mark span{position:absolute;left:calc(14px + (100% - 28px) * 0.18147);transform:translateX(-50%);font-size:12px;font-weight:800;color:var(--gruen);white-space:nowrap}
+.base-mark span::after{content:'';position:absolute;left:50%;top:100%;margin-left:-5px;border:5px solid transparent;border-top-color:var(--gruen)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:99px;margin:8px 0 6px;
+  background:linear-gradient(90deg,var(--hellgruen) 0%,var(--hellgruen) var(--fill,14.3%),#e2e8e1 var(--fill,14.3%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;border:4px solid var(--gruen);box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:grab}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid var(--gruen);cursor:grab}
+input[type=range]:focus-visible::-webkit-slider-thumb{outline:3px solid var(--rot);outline-offset:2px}
+.scale{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{font:inherit;cursor:pointer}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;color:var(--text);transition:all .15s}
+.chip:hover{border-color:var(--hellgruen)}
+.chip.on{background:var(--gruen);border-color:var(--gruen);color:#fff}
+.reset{border:none;background:var(--rot);color:#fff;border-radius:10px;padding:8px 14px;font-weight:800;font-size:13px}
+.reset:hover{filter:brightness(1.08)}
+
+/* Ergebnis */
+.res-top{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 16px}
+.factor{font-weight:900;font-size:clamp(48px,8vw,80px);line-height:.95;color:var(--gruen);font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.factor small{font-size:.45em;font-weight:900}
+.res-label{font-weight:800;font-size:16px;max-width:280px;line-height:1.3}
+.seg{display:inline-flex;background:var(--soft);border-radius:12px;padding:4px;gap:4px;margin:14px 0 4px;flex-wrap:wrap}
+.seg button{border:none;background:transparent;border-radius:9px;padding:7px 12px;font-size:13px;font-weight:700;color:var(--muted)}
+.seg button.on{background:#fff;color:var(--gruen);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+.icons{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 6px;min-height:64px;align-items:center}
+.ic{position:relative;width:var(--s,58px);height:var(--s,58px);animation:pop .35s cubic-bezier(.3,1.5,.6,1) both}
+.ic svg{position:absolute;inset:0;width:100%;height:100%}
+.ic .fillwrap{position:absolute;inset:0;overflow:hidden;transition:width .35s ease}
+.ic .fillwrap svg{width:var(--s,58px);height:var(--s,58px)}
+.ic-num{font-weight:900;font-size:14px;color:var(--muted);margin-left:6px}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+.band{margin-top:14px}
+.band-bar{position:relative;height:38px;margin:26px 4px 6px}
+.band-axis{position:absolute;left:0;right:0;top:16px;height:6px;background:#e7ece6;border-radius:99px}
+.band-range{position:absolute;top:12px;height:14px;border-radius:99px;background:linear-gradient(90deg,#b5dc98,var(--hellgruen),#b5dc98);transition:left .35s ease,width .35s ease}
+.band-mark{position:absolute;top:4px;width:4px;height:30px;margin-left:-2px;background:var(--gruen);border-radius:2px;transition:left .35s ease}
+.band-mark span{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:800;color:var(--gruen)}
+.band-ticks{position:relative;height:16px;font-size:11px;color:var(--muted);margin:0 4px}
+.band-ticks span{position:absolute;transform:translateX(-50%)}
+.band-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:12px}
+.bl{background:var(--soft);border-radius:10px;padding:8px 10px;font-size:12px;cursor:pointer;border:2px solid transparent;text-align:left}
+.bl.on{border-color:var(--gruen);background:#fff}
+.bl b{display:block;font-size:20px;font-weight:900;color:var(--gruen);font-variant-numeric:tabular-nums}
+.bl i{font-style:normal;color:var(--muted)}
+
+/* Systemgrenze + Annahmen */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:18px}
+@media (max-width:880px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.sketch svg{width:100%;height:auto;display:block}
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:460px}
+th,td{padding:6px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:middle}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td input{width:86px;font:inherit;font-variant-numeric:tabular-nums;text-align:right;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:#fbfcfb}
+td input:focus{outline:2px solid var(--hellgruen);border-color:var(--hellgruen)}
+td.sum{font-weight:800;color:var(--gruen)}
+.src{font-size:11px;color:var(--muted);display:block;font-weight:400}
+.row-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-top:12px}
+label.tog{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:600;cursor:pointer}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:2px solid var(--line);margin-bottom:16px}
+.tabs button{border:none;background:none;padding:10px 12px;font-weight:800;font-size:14px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button.on{color:var(--gruen);border-bottom-color:var(--gruen)}
+.tabpane{display:none;animation:fade .3s ease} .tabpane.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.tabpane h4{margin:18px 0 6px;font-size:16px}
+.tabpane p,.tabpane li{font-size:15px}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+@media (max-width:700px){.cols{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--soft);border-radius:12px;padding:12px 14px}
+.box.pro{border-left:4px solid var(--hellgruen)} .box.con{border-left:4px solid var(--rot)}
+.box h5{margin:0 0 6px;font-size:14px}
+.box ul{margin:0;padding-left:18px} .box li{font-size:14px;margin:4px 0}
+.fazit{margin-top:14px;background:var(--gruen);color:#fff;border-radius:12px;padding:14px 16px;font-weight:600}
+.fazit .gk{color:#fff;background:var(--rot);padding:0 5px;border-radius:4px}
+.mini-tbl{min-width:0}
+
+/* Silhouette */
+.silhouette{margin-top:28px;line-height:0}
+.silhouette svg{width:100%;height:auto;display:block}
+.sil-cap{background:var(--gruen);color:var(--zartgruen);text-align:center;font-size:12px;padding:6px 16px 14px;line-height:1.4}
+
+/* Fußleiste */
+.fuss{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:4px solid var(--hellgruen);box-shadow:0 -6px 24px rgba(0,0,0,.08)}
+.fuss-bar{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 16px;max-width:1180px;margin:0 auto}
+.fuss-bar .f-sum{font-size:13px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fuss-bar .f-sum b{color:var(--text)}
+.ftoggle{flex:0 0 auto;border:none;background:var(--gruen);color:#fff;border-radius:10px;padding:9px 14px;font-weight:800;font-size:13px}
+.fuss-panel{max-height:0;overflow:hidden;transition:max-height .45s ease}
+.fuss.open .fuss-panel{max-height:72vh;overflow-y:auto}
+.fuss-inner{max-width:1180px;margin:0 auto;padding:4px 16px 20px;display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:24px}
+@media (max-width:820px){.fuss-inner{grid-template-columns:minmax(0,1fr)}}
+.formula{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;background:#f6f8f5;border:1px solid var(--line);border-radius:10px;padding:12px;white-space:pre-wrap;overflow-x:auto;line-height:1.6}
+.formula b{color:var(--gruen)}
+.srcs{margin:0;padding-left:18px;font-size:13px}
+.srcs li{margin:6px 0;overflow-wrap:anywhere}
+.fuss h4{margin:12px 0 6px;font-size:14px}
+@media (max-width:560px){.fuss-bar .f-sum{display:none}.fuss-bar{justify-content:center}.ftoggle{width:100%}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Kreuz-Grafik mit Flugansicht */
+.map-tools{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.fly{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line);perspective:1300px;perspective-origin:50% 0%;
+  background:linear-gradient(180deg,#bfdcf2 0%,#e3f0fa 38%,#d9eed9 70%)}
+.fly-stage{transform-origin:50% 60%;transition:transform 1.6s cubic-bezier(.25,.8,.25,1);will-change:transform}
+.fly-stage svg{display:block;width:100%;height:auto}
+.fly.tilt .fly-stage{transform:rotateX(46deg) rotateZ(-9deg) scale(1.28) translateY(-6%)}
+.fly.playing .fly-stage{animation:flight 6s cubic-bezier(.4,0,.2,1) forwards;transition:none}
+@keyframes flight{0%{transform:none}35%{transform:rotateX(30deg) rotateZ(12deg) scale(1.15)}70%{transform:rotateX(50deg) rotateZ(-14deg) scale(1.35) translateY(-8%)}100%{transform:rotateX(46deg) rotateZ(-9deg) scale(1.28) translateY(-6%)}}
+.fly-chip{position:absolute;left:10px;top:10px;background:rgba(30,90,43,.92);color:#fff;font-size:12px;font-weight:700;padding:5px 10px;border-radius:8px;max-width:calc(100% - 20px)}
+.fly.nocars #cars{display:none}
+.map-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+@media (max-width:760px){.map-facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fact{background:var(--soft);border-radius:10px;padding:10px 12px}
+.fact b{display:block;font-size:22px;font-weight:900;color:var(--gruen);font-variant-numeric:tabular-nums}
+.fact span{font-size:12px;color:var(--muted)}
+
+/* Ansicht-Umschalter */
+.viewbar{position:sticky;top:0;z-index:30;background:rgba(243,246,242,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.viewbar .wrap{display:flex;justify-content:center;padding-top:8px;padding-bottom:8px}
+.viewbar .seg{margin:0}
+.viewbar .seg button{padding:8px 16px;font-size:14px}
+body.simple #detail{display:none} body:not(.simple) #simple{display:none}
+
+/* Einfache Ansicht */
+#simple .card{max-width:640px;margin:20px auto 0;text-align:center}
+#simple .s-q{font-weight:800;font-size:17px;margin:0 0 14px;line-height:1.35}
+#simple .s-kw{display:flex;align-items:baseline;justify-content:center;gap:8px;flex-wrap:wrap}
+#simple .s-kw .big{font-size:clamp(34px,9vw,48px)}
+#simple .btns{justify-content:center}
+#simple .eq{font-weight:900;font-size:22px;color:var(--muted);margin:18px 0 0}
+#simple .factor{font-size:clamp(64px,18vw,96px)}
+#simple .icons{justify-content:center}
+#simple .s-band{font-size:14px;color:var(--muted);margin-top:4px}
+#simple .s-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.btn-main{border:none;background:var(--gruen);color:#fff;border-radius:10px;padding:11px 16px;font-weight:800;font-size:14px}
+.btn-sec{border:1.5px solid var(--gruen);background:#fff;color:var(--gruen);border-radius:10px;padding:10px 16px;font-weight:800;font-size:14px}
+</style>
+
+</head>
+<body class="simple">
+
+<header class="kopf">
+  <h1><span class="r">GASKRAFTWERK</span> <span class="g">SCHLÜCHTERN</span></h1>
+  <div class="trenn"></div>
+  <h2>CO₂ pro Jahr im Vergleich mit dem Frankfurter Kreuz <span style="white-space:nowrap">(1,5-km-Kernbereich)</span></h2>
+</header>
+<nav class="viewbar" aria-label="Ansicht wählen"><div class="wrap"><div class="seg" role="group" id="viewSeg">
+  <button data-v="simple" class="on">Einfache Ansicht</button><button data-v="detail">Detaillierte Ansicht</button>
+</div></div></nav>
+<main class="wrap" id="simple">
+  <div class="card" aria-live="polite">
+    <p class="s-q">Wie viele Frankfurter Kreuze (1,5-km-Kernbereich) stoßen so viel CO₂ aus wie das geplante <span class="gk">Gaskraftwerk</span>?</p>
+    <div class="s-kw"><span class="big" id="sT">188.000</span><span class="unit">t CO₂ pro Jahr</span></div>
+    <span class="delta" id="sD">±0 % ggü. 188.000 t</span>
+    <div class="base-mark" aria-hidden="true"><span>Basis 188.000 t</span></div>
+    <input type="range" id="sSlider" min="141000" max="400000" step="1000" value="188000" aria-label="CO₂-Ausstoß des Gaskraftwerks in Tonnen pro Jahr">
+    <div class="scale"><span>141.000 t</span><span>400.000 t</span></div>
+    <div class="btns" id="sPresets">
+      <button class="chip" data-t="141000">−25 %</button>
+      <button class="chip on" data-t="188000">Basis</button>
+      <button class="chip" data-t="376000">Doppelt</button>
+      <button class="chip" data-t="400000">Max</button>
+    </div>
+    <div class="eq">entspricht</div>
+    <div class="factor" id="sFac">4,5<small>×</small></div>
+    <div style="font-weight:800;font-size:17px">Frankfurter Kreuz<br><span style="color:var(--hellgruen)">im 1,5-km-Kernbereich</span></div>
+    <div class="icons" id="sIcons"></div>
+    <div class="s-band" id="sBand"></div>
+    <div class="s-actions">
+      <button class="btn-main" id="sDetails">ⓘ Rechenweg &amp; Quellen</button>
+      <button class="btn-sec" id="sToDetail">Detaillierte Ansicht mit Karte →</button>
+    </div>
+  </div>
+</main>
+
+
+<main class="wrap" id="detail">
+
+<section class="grid" aria-label="Vergleichsrechner">
+  <!-- Kraftwerk -->
+  <div class="card">
+    <h3>Geplantes <span class="gk">Gaskraftwerk</span></h3>
+    <div class="kw">
+      <svg viewBox="0 0 120 130" aria-hidden="true">
+        <g class="plume" fill="#c9d1cb">
+          <circle cx="40" cy="20" r="9"><animate attributeName="cy" values="22;12;22" dur="6s" repeatCount="indefinite"/></circle>
+          <circle cx="52" cy="12" r="12" opacity=".8"><animate attributeName="cy" values="14;4;14" dur="7s" repeatCount="indefinite"/></circle>
+          <circle cx="68" cy="8" r="9" opacity=".6"><animate attributeName="cy" values="10;2;10" dur="8s" repeatCount="indefinite"/></circle>
+        </g>
+        <rect x="32" y="28" width="16" height="70" rx="2" fill="#232826"/>
+        <rect x="32" y="40" width="16" height="6" fill="#CD281E"/>
+        <rect x="32" y="56" width="16" height="6" fill="#CD281E"/>
+        <rect x="58" y="50" width="10" height="48" rx="2" fill="#5b6560"/>
+        <path d="M8 98 V70 l22 -12 v12 l22 -12 v12 l22 -12 V98 Z" fill="#1E5A2B"/>
+        <rect x="74" y="66" width="38" height="32" fill="#2c6b3a"/>
+        <rect x="80" y="74" width="8" height="8" fill="#D7F0C8"/><rect x="96" y="74" width="8" height="8" fill="#D7F0C8"/>
+        <rect x="14" y="80" width="8" height="8" fill="#D7F0C8"/><rect x="36" y="80" width="8" height="8" fill="#D7F0C8"/><rect x="58" y="80" width="8" height="8" fill="#D7F0C8"/>
+        <rect x="2" y="98" width="116" height="6" rx="3" fill="#6DB33F"/>
+        <text x="60" y="124" text-anchor="middle" font-size="11" font-weight="800" fill="#CD281E" font-family="Inter,system-ui,sans-serif">CO₂</text>
+      </svg>
+      <div>
+        <div><span class="big" id="kwT">188.000</span></div>
+        <div class="unit">Tonnen CO₂ pro Jahr</div>
+        <span class="delta" id="kwD">±0 % ggü. 188.000 t</span>
+      </div>
+    </div>
+    <label for="slider" class="hint" style="display:block;margin-top:14px">Ausstoß anpassen (141.000 bis 400.000 t)</label>
+    <div class="base-mark" aria-hidden="true"><span>Basis 188.000 t</span></div>
+    <input type="range" id="slider" min="141000" max="400000" step="1000" value="188000" aria-describedby="kwD">
+    <div class="scale"><span>141.000 t<br>−25 %</span><span style="text-align:right">400.000 t<br>+113 %</span></div>
+    <div class="btns" id="presets">
+      <button class="chip" data-t="141000">−25 % (141.000 t)</button>
+      <button class="chip on" data-t="188000">Basis (188.000 t)</button>
+      <button class="chip" data-t="282000">+50 % (282.000 t)</button>
+      <button class="chip" data-t="376000">Doppelt (376.000 t)</button>
+      <button class="chip" data-t="400000">Max (400.000 t)</button>
+      <button class="reset" id="reset">↺ Reset auf 188.000 t</button>
+    </div>
+    <p class="hint" style="margin:14px 0 0">Ausgangswert 188.000 t CO₂/Jahr: Angabe für das geplante <span class="gk">Gaskraftwerk</span> (direkte Emissionen am Standort). Der Regler zeigt, wie sich der Vergleich bei anderen Betriebsstunden oder Annahmen verschiebt.</p>
+  </div>
+
+  <!-- Ergebnis -->
+  <div class="card" aria-live="polite">
+    <h3>Entspricht dem CO₂ von …</h3>
+    <div class="res-top">
+      <div class="factor" id="fac">4,5<small>×</small></div>
+      <div class="res-label">Frankfurter Kreuzen<br><span style="color:var(--hellgruen);font-weight:900">im 1,5-km-Kernbereich</span><br><span class="hint" style="font-weight:600">Szenario <span id="scnName">mittel</span> · <a href="#karte">auf der Karte ansehen</a></span></div>
+    </div>
+    <div class="seg" role="group" aria-label="Annahme für das Frankfurter Kreuz">
+      <button data-s="low">Niedrige Annahme</button>
+      <button data-s="mid" class="on">Mittlere Annahme</button>
+      <button data-s="high">Hohe Annahme</button>
+    </div>
+    <div class="icons" id="icons"></div>
+    <div class="hint" id="iconHint"></div>
+
+    <div class="band">
+      <div class="hint" style="font-weight:700;color:var(--text)">Bandbreite je nach Annahme zum Kernbereich</div>
+      <div class="band-bar">
+        <div class="band-axis"></div>
+        <div class="band-range" id="bRange"></div>
+        <div class="band-mark" id="bMark"><span id="bMarkL"></span></div>
+      </div>
+      <div class="band-ticks" id="bTicks"></div>
+      <div class="band-legend" id="bLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section class="card" id="karte" style="margin-top:18px">
+  <h3>So groß ist der 1,5-km-Kernbereich am Frankfurter Kreuz</h3>
+  <div class="map-tools">
+    <div class="seg" role="group" aria-label="Ansicht der Grafik" id="flyBtns" style="margin:0">
+      <button data-f="fly" class="on">✈ Flugansicht</button>
+      <button data-f="top">Draufsicht</button>
+    </div>
+    <label class="tog"><input type="checkbox" id="carsOn" checked> Verkehr animieren</label>
+  </div>
+  <div class="fly" id="fly">
+    <div class="fly-stage" id="flyStage">
+<svg viewBox="0 0 1088 852" role="img" aria-label="Vereinfachte Karte des Frankfurter Kreuzes: A3 und A5 kreuzen sich; je 1,5 km auf beiden Autobahnen sind als Kernbereich grün markiert">
+  <defs>
+    <path id="pA3e" d="M-20,469 L1108,541"/><path id="pA3w" d="M1108,531 L-20,459"/>
+    <path id="pA5s" d="M724,-10 L436,862"/><path id="pA5n" d="M424,858 L712,-14"/>
+    <pattern id="wald" width="26" height="26" patternUnits="userSpaceOnUse"><rect width="26" height="26" fill="#d9eed9"/><circle cx="6" cy="7" r="3" fill="#cfe6cf"/><circle cx="19" cy="18" r="3.5" fill="#cfe6cf"/></pattern>
+  </defs>
+  <rect width="1088" height="852" fill="url(#wald)"/>
+  <!-- Flughafen -->
+  <path d="M0,560 L120,548 L440,548 L470,600 L425,852 L0,852Z" fill="#e8ecf6"/>
+  <g fill="#d5dcea"><rect x="40" y="640" width="330" height="26" rx="4" transform="rotate(-7 200 650)"/><rect x="20" y="730" width="360" height="26" rx="4" transform="rotate(-7 200 740)"/><rect x="250" y="590" width="120" height="60" rx="6"/></g>
+  <path d="M0,580 L110,572 L118,620 L0,632Z" fill="#c9d3e6"/>
+  <!-- Bebauung Unterschweinstiege -->
+  <path d="M100,330 L470,318 L500,420 L470,470 L120,470 L90,420Z" fill="#f2f0e8"/>
+  <g stroke="#dcd8ca" stroke-width="3"><line x1="140" y1="410" x2="470" y2="405"/><line x1="230" y1="350" x2="240" y2="465"/><line x1="320" y1="345" x2="325" y2="465"/><line x1="410" y1="340" x2="415" y2="465"/></g>
+  <!-- Freifläche am Kreuz -->
+  <path d="M470,430 L570,420 L615,560 L540,852 L430,852 L470,600Z" fill="#efe8d6"/>
+  <!-- Bahnstrecken -->
+  <g fill="none" stroke="#b9c2c9" stroke-width="3" stroke-dasharray="10 5"><path d="M790,0 C760,140 720,240 690,330"/><path d="M1060,90 C960,300 880,520 830,852"/><path d="M1088,140 C990,330 920,520 880,852"/></g>
+  <!-- Straßen: Rand -->
+  <g fill="none" stroke="#7889a7" stroke-linecap="round">
+    <path d="M0,400 C120,330 250,300 420,300 S640,330 760,355 S1000,395 1088,405" stroke-width="16"/>
+    <path d="M0,470 L1088,540" stroke-width="26"/>
+    <path d="M718,0 L432,852" stroke-width="26"/>
+  </g>
+  <!-- Rampen -->
+  <g fill="none" stroke="#9aaac6" stroke-width="9" stroke-linecap="round">
+    <circle cx="500" cy="462" r="32"/><circle cx="604" cy="470" r="32"/><circle cx="494" cy="548" r="32"/><circle cx="596" cy="556" r="32"/>
+    <path d="M330,478 C450,470 540,420 600,330"/><path d="M780,532 C650,545 590,600 525,720"/>
+    <path d="M610,360 C650,430 700,490 820,526"/><path d="M280,486 C380,500 450,560 470,640"/>
+    <ellipse cx="642" cy="320" rx="16" ry="38" transform="rotate(18 642 320)"/>
+  </g>
+  <!-- Straßen: Fahrbahn -->
+  <g fill="none" stroke="#a9b7d0" stroke-linecap="round">
+    <path d="M0,400 C120,330 250,300 420,300 S640,330 760,355 S1000,395 1088,405" stroke-width="11"/>
+    <path d="M0,470 L1088,540" stroke-width="20"/>
+    <path d="M718,0 L432,852" stroke-width="20"/>
+  </g>
+  <g stroke="#eef2f8" stroke-width="1.6" stroke-dasharray="12 10"><path d="M0,470 L1088,540"/><path d="M718,0 L432,852"/></g>
+
+  <!-- Kernbereich -->
+  <circle cx="548" cy="508" r="276" fill="rgba(109,179,63,.12)" stroke="#1E5A2B" stroke-width="2.5" stroke-dasharray="9 7"/>
+  <g stroke="#6DB33F" stroke-width="30" stroke-linecap="butt" opacity=".55"><line x1="636" y1="246" x2="460" y2="770"/><line x1="273" y1="490" x2="823" y2="526"/></g>
+  <g stroke="#1E5A2B" stroke-width="3.5"><line x1="636" y1="246" x2="460" y2="770"/><line x1="273" y1="490" x2="823" y2="526"/></g>
+  <g fill="#fff" stroke="#1E5A2B" stroke-width="4"><circle cx="636" cy="246" r="8"/><circle cx="460" cy="770" r="8"/><circle cx="273" cy="490" r="8"/><circle cx="823" cy="526" r="8"/></g>
+
+  <!-- Verkehr -->
+  <g id="cars">
+    <g fill="#ffffff" stroke="#55607a" stroke-width="1">
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="7s" repeatCount="indefinite" rotate="auto" begin="0s"><mpath href="#pA3e"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="7s" repeatCount="indefinite" rotate="auto" begin="-2.3s"><mpath href="#pA3e"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="7s" repeatCount="indefinite" rotate="auto" begin="-4.6s"><mpath href="#pA3e"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6.5s" repeatCount="indefinite" rotate="auto" begin="-1s"><mpath href="#pA3w"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6.5s" repeatCount="indefinite" rotate="auto" begin="-3.8s"><mpath href="#pA3w"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto" begin="-0.5s"><mpath href="#pA5s"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto" begin="-3.2s"><mpath href="#pA5s"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6.2s" repeatCount="indefinite" rotate="auto" begin="-1.7s"><mpath href="#pA5n"/></animateMotion></rect>
+      <rect x="-6" y="-3" width="12" height="6" rx="2"><animateMotion dur="6.2s" repeatCount="indefinite" rotate="auto" begin="-4.9s"><mpath href="#pA5n"/></animateMotion></rect>
+    </g>
+    <g fill="#CD281E" stroke="#7a1a12" stroke-width="1">
+      <rect x="-11" y="-4" width="22" height="8" rx="2"><animateMotion dur="11s" repeatCount="indefinite" rotate="auto" begin="-3s"><mpath href="#pA3e"/></animateMotion></rect>
+      <rect x="-11" y="-4" width="22" height="8" rx="2"><animateMotion dur="10s" repeatCount="indefinite" rotate="auto" begin="-7s"><mpath href="#pA5n"/></animateMotion></rect>
+      <rect x="-11" y="-4" width="22" height="8" rx="2"><animateMotion dur="10.5s" repeatCount="indefinite" rotate="auto" begin="-5s"><mpath href="#pA5s"/></animateMotion></rect>
+    </g>
+  </g>
+
+  <!-- Beschriftungen -->
+  <g font-family="Inter,system-ui,sans-serif" font-weight="800">
+    <g transform="translate(660 160)"><rect x="-20" y="-13" width="40" height="26" rx="6" fill="#2f5fb5" stroke="#fff" stroke-width="2"/><text y="6" text-anchor="middle" fill="#fff" font-size="16">5</text></g>
+    <g transform="translate(470 790)"><rect x="-20" y="-13" width="40" height="26" rx="6" fill="#2f5fb5" stroke="#fff" stroke-width="2"/><text y="6" text-anchor="middle" fill="#fff" font-size="16">5</text></g>
+    <g transform="translate(150 480)"><rect x="-20" y="-13" width="40" height="26" rx="6" fill="#2f5fb5" stroke="#fff" stroke-width="2"/><text y="6" text-anchor="middle" fill="#fff" font-size="16">3</text></g>
+    <g transform="translate(980 534)"><rect x="-20" y="-13" width="40" height="26" rx="6" fill="#2f5fb5" stroke="#fff" stroke-width="2"/><text y="6" text-anchor="middle" fill="#fff" font-size="16">3</text></g>
+    <g transform="translate(1000 396)"><rect x="-19" y="-12" width="38" height="24" rx="5" fill="#f3d23c" stroke="#b49100" stroke-width="1.5"/><text y="5" text-anchor="middle" fill="#232826" font-size="14">43</text></g>
+    <text x="130" y="296" font-size="15" letter-spacing="2" fill="#5b6560">UNTERSCHWEINSTIEGE</text>
+    <text x="150" y="805" font-size="20" fill="#5b6a8a">✈ Flughafen Frankfurt</text>
+    <g transform="translate(830 600)"><rect x="-6" y="-24" width="196" height="34" rx="8" fill="#fff" stroke="#1E5A2B" stroke-width="2"/><text x="92" y="0" text-anchor="middle" font-size="18" fill="#1E5A2B">Frankfurter Kreuz</text></g>
+    <g transform="translate(588 520) rotate(-71.4)"><rect x="40" y="-16" width="132" height="28" rx="7" fill="#1E5A2B"/><text x="106" y="4" text-anchor="middle" font-size="16" fill="#fff">1,5 km auf A5</text></g>
+    <g transform="translate(320 470) rotate(3.7)"><rect x="0" y="-36" width="132" height="28" rx="7" fill="#1E5A2B"/><text x="66" y="-16" text-anchor="middle" font-size="16" fill="#fff">1,5 km auf A3</text></g>
+    <text x="760" y="790" font-size="13" fill="#232826">0</text><text x="905" y="790" font-size="13" fill="#232826">500 m</text>
+    <rect x="762" y="796" width="182" height="8" fill="#fff" stroke="#232826" stroke-width="1.5"/><rect x="762" y="796" width="91" height="8" fill="#232826"/>
+    <g transform="translate(1040 60)"><circle r="24" fill="#fff" stroke="#c5ccd5"/><path d="M0,-17 L8,8 L0,3 L-8,8Z" fill="#CD281E"/><text y="21" text-anchor="middle" font-size="10" fill="#232826">N</text></g>
+  </g>
+</svg>
+    </div>
+    <div class="fly-chip">Kernbereich: je 750 m ab Kreuzmitte auf A3 und A5 + Rampen</div>
+  </div>
+  <div class="map-facts">
+    <div class="fact"><b>1,5 km</b><span>Strecke je Autobahn im Kernbereich (A3 und A5), wie in der Kartenmessung (≈ 1,52 km)</span></div>
+    <div class="fact"><b>≈ 285.000</b><span>Kfz pro Tag auf A3 und A5 zusammen (Hessen Mobil, Zählung 2015)</span></div>
+    <div class="fact"><b>≈ 0,47 Mio.</b><span>Fahrzeug-Kilometer pro Tag in diesem Bereich (mittlere Annahme)</span></div>
+    <div class="fact"><b id="mapT">≈ 42.000 t</b><span>CO₂ pro Jahr im Kernbereich (Szenario <span id="mapScn">mittel</span>)</span></div>
+  </div>
+  <p class="hint" style="margin:10px 0 0">Vereinfachte, eigene Vektorgrafik nach einer Kartenansicht des Kreuzes (Kartenmessung entlang der A5: ca. 1,52 km). Maßstabsbalken und markierte Strecken sind annähernd maßstäblich, Rampen und Umgebung nur schematisch. Die Fahrzeuge zeigen das Prinzip, nicht die echte Verkehrsdichte: Rot = Lkw.</p>
+</section>
+
+<section class="grid2">
+  <div class="card sketch">
+    <h3>Systemgrenze: 1,5-km-Kernbereich</h3>
+    <svg viewBox="0 0 400 330" role="img" aria-label="Skizze des Frankfurter Kreuzes mit markiertem Kernbereich: je 750 m in jede Richtung auf A3 und A5 plus Rampen">
+      <defs>
+        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="#eef7e8"/><line x1="0" y1="0" x2="0" y2="8" stroke="#cfe8bd" stroke-width="3"/></pattern>
+      </defs>
+      <rect x="0" y="0" width="400" height="330" fill="#fafcf9"/>
+      <!-- Wald -->
+      <g fill="#e2eedc"><circle cx="40" cy="40" r="30"/><circle cx="360" cy="290" r="34"/><circle cx="350" cy="40" r="26"/><circle cx="50" cy="290" r="28"/></g>
+      <!-- Kernbereich -->
+      <rect x="95" y="60" width="210" height="210" rx="18" fill="url(#hatch)" stroke="#6DB33F" stroke-width="2.5" stroke-dasharray="7 5"/>
+      <!-- A3 horizontal (diagonal im Original, hier schematisch) -->
+      <rect x="0" y="155" width="400" height="20" fill="#9aa59e"/>
+      <line x1="0" y1="165" x2="400" y2="165" stroke="#fff" stroke-width="1.5" stroke-dasharray="10 8"/>
+      <!-- A5 vertikal -->
+      <rect x="190" y="0" width="20" height="330" fill="#7d8882"/>
+      <line x1="200" y1="0" x2="200" y2="330" stroke="#fff" stroke-width="1.5" stroke-dasharray="10 8"/>
+      <!-- Rampen (Kleeblatt) -->
+      <g fill="none" stroke="#b6bfb9" stroke-width="7">
+        <path d="M210 155 C 255 155, 255 110, 210 110"/>
+        <path d="M190 175 C 145 175, 145 220, 190 220"/>
+        <path d="M210 175 C 255 175, 255 220, 210 220"/>
+        <path d="M190 155 C 145 155, 145 110, 190 110"/>
+      </g>
+      <g fill="none" stroke="#b6bfb9" stroke-width="5">
+        <path d="M230 155 Q 272 120 210 78"/><path d="M170 175 Q 128 210 190 252"/>
+      </g>
+      <!-- Mittelpunkt -->
+      <circle cx="200" cy="165" r="5" fill="#CD281E"/>
+      <!-- Maßpfeile -->
+      <g stroke="#1E5A2B" stroke-width="1.6" fill="#1E5A2B" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="700">
+        <line x1="95" y1="290" x2="305" y2="290"/><path d="M95 290 l7 -4 v8z M305 290 l-7 -4 v8z" stroke="none"/>
+        <text x="200" y="306" text-anchor="middle" stroke="none">1,5 km (je 750 m ab Kreuzmitte)</text>
+        <line x1="320" y1="60" x2="320" y2="270"/><path d="M320 60 l-4 7 h8z M320 270 l-4 -7 h8z" stroke="none"/>
+        <text x="330" y="168" stroke="none" transform="rotate(90 330 168)" text-anchor="middle">1,5 km</text>
+      </g>
+      <g font-family="Inter,system-ui,sans-serif" font-weight="900" font-size="13">
+        <rect x="8" y="132" width="34" height="18" rx="4" fill="#1d4ed8"/><text x="25" y="145" fill="#fff" text-anchor="middle">A 3</text>
+        <text x="48" y="146" font-size="10" font-weight="700" fill="#5b6560">Köln / Flughafen</text>
+        <text x="392" y="146" font-size="10" font-weight="700" fill="#5b6560" text-anchor="end">Offenbach / Würzburg</text>
+        <rect x="216" y="8" width="34" height="18" rx="4" fill="#1d4ed8"/><text x="233" y="21" fill="#fff" text-anchor="middle">A 5</text>
+        <text x="256" y="21" font-size="10" font-weight="700" fill="#5b6560">Kassel / Westkreuz</text>
+        <text x="216" y="322" font-size="10" font-weight="700" fill="#5b6560">Darmstadt / Basel</text>
+      </g>
+      <text x="104" y="76" font-family="Inter,system-ui,sans-serif" font-size="11" font-weight="800" fill="#1E5A2B">Kernbereich</text>
+    </svg>
+    <p class="hint" style="margin:10px 0 0">Schematische Skizze, nicht maßstäblich. Gezählt wird die Fahrleistung auf A3 und A5 jeweils 750 m in jede Richtung ab Kreuzmitte (zusammen 1,5 km je Autobahn) plus der Verkehr auf den Verbindungsrampen. Zu- und Abfahrtsstrecken außerhalb dieses Rahmens zählen nicht mit.</p>
+  </div>
+
+  <div class="card">
+    <h3>Annahmen zum 1,5-km-Kernbereich <span class="tag">editierbar</span></h3>
+    <div class="tbl-wrap">
+    <table id="ann">
+      <thead><tr><th>Parameter</th><th>Niedrig</th><th>Mittel</th><th>Hoch</th></tr></thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr><td><b>Fahrzeug-km pro Tag</b></td><td class="sum" id="vkm-low"></td><td class="sum" id="vkm-mid"></td><td class="sum" id="vkm-high"></td></tr>
+        <tr><td><b>Ø g CO₂ je Fahrzeug-km</b></td><td class="sum" id="ef-low"></td><td class="sum" id="ef-mid"></td><td class="sum" id="ef-high"></td></tr>
+        <tr><td><b>t CO₂ pro Jahr</b></td><td class="sum" id="e-low"></td><td class="sum" id="e-mid"></td><td class="sum" id="e-high"></td></tr>
+      </tfoot>
+    </table>
+    </div>
+    <div class="row-actions">
+      <label class="tog"><input type="checkbox" id="wtw"> Vorkette Kraftstoff (Well-to-Wheel) einrechnen, +<input id="wtwPct" type="number" value="20" min="0" max="50" style="width:52px;font:inherit;padding:2px 4px;border:1px solid var(--line);border-radius:6px">%</label>
+      <button class="chip" id="annReset">Standardwerte</button>
+    </div>
+    <p class="hint" style="margin:8px 0 0">Verkehrsmengen: Hessen Mobil (Zählung 2015, je Achse gemittelt aus den beiden angrenzenden Abschnitten). Abbieger und Emissionsfaktoren: eigene Schätzung, an HBEFA-Größenordnungen angelehnt. Details in der Fußleiste unter „Rechenweg &amp; Quellen“.</p>
+  </div>
+</section>
+
+<section class="card" style="margin-top:18px">
+  <h3>Fachliche Einordnung</h3>
+  <div class="tabs" role="tablist">
+    <button class="on" data-t="t1" role="tab">1 · Warum 45.000 t oft zu niedrig sind</button>
+    <button data-t="t2" role="tab">2 · Wie groß ist die Varianz?</button>
+    <button data-t="t3" role="tab">3 · Ist der Vergleich fair?</button>
+    <button data-t="t4" role="tab">4 · Plausibilität 188.000 t</button>
+  </div>
+
+  <div class="tabpane on" id="t1">
+    <p>Für das Frankfurter Kreuz kursiert häufig ein Wert von rund <b>45.000 t CO₂ pro Jahr</b>. Für den <b>1,5-km-Kernbereich</b> passt diese Größenordnung (unsere mittlere Annahme ergibt <b id="t1mid"></b>). Für das <b>gesamte Kreuz</b> ist sie aber zu niedrig. Dafür gibt es vier Gründe:</p>
+    <h4>Systemgrenze und Streckenlänge</h4>
+    <p>Die Emissionen wachsen direkt mit der betrachteten Streckenlänge. Zählt man je Autobahn statt 1,5 km etwa 5 km (also den ganzen Verflechtungsbereich mit Ein- und Ausfädelstreifen), ergeben sich mit sonst gleichen Annahmen schon <b id="t1five"></b>. Wer „das Kreuz“ sagt, muss also sagen, wie viele Kilometer gemeint sind.</p>
+    <h4>Pkw und Lkw</h4>
+    <p>Ein schwerer Lkw stößt pro Kilometer etwa vier- bis fünfmal so viel CO₂ aus wie ein Pkw. Am Kreuz sind rund 9 bis 14 % der Fahrzeuge Schwerverkehr. Rechnet man nur mit einem Pkw-Durchschnittswert, fehlt ein Drittel bis die Hälfte der Emissionen.</p>
+    <h4>Tagesverkehr und 24-Stunden-Verkehr</h4>
+    <p>Die amtliche Kennzahl ist der <b>DTV</b>, der durchschnittliche tägliche Verkehr über 24 Stunden und alle Tage des Jahres. Wer nur den Tagesverkehr (z. B. 6 bis 22 Uhr) oder nur Werktage hochrechnet, unterschätzt die Jahressumme. Gerade Lkw fahren viel nachts.</p>
+    <h4>Rampen und Verflechtung</h4>
+    <p>Am Kreuz wechseln zehntausende Fahrzeuge täglich zwischen A3 und A5 (Flughafen, Logistik). Diese Rampenfahrten kommen zur Fahrleistung auf den Hauptachsen hinzu.</p>
+    <h4>So rechnet der 1,5-km-Kernbereich</h4>
+    <div class="formula">CO₂ [t/Jahr] = [ (DTV<sub>A3</sub> + DTV<sub>A5</sub>) × 1,5 km + Abbieger × Rampenlänge ] × 365 Tage × Ø g CO₂/km ÷ 1.000.000
+Ø g CO₂/km  = (1 − SV-Anteil) × EF<sub>Pkw/LNF</sub> + SV-Anteil × EF<sub>Lkw</sub></div>
+  </div>
+
+  <div class="tabpane" id="t2">
+    <p>Der Vergleichsfaktor hängt an mehreren Annahmen, die sich gegenseitig verstärken können. Mit den drei hinterlegten Szenarien entspricht der aktuelle Kraftwerkswert <b id="t2range"></b> Kernbereichen des Frankfurter Kreuzes.</p>
+    <div class="tbl-wrap"><table class="mini-tbl">
+      <thead><tr><th>Einflussgröße</th><th>Spanne</th><th>Wirkung auf das Kreuz</th></tr></thead>
+      <tbody>
+        <tr><td>Verkehrszählung (Jahr, Zählstelle)</td><td>±5–10 %</td><td>proportional</td></tr>
+        <tr><td>Schwerverkehrsanteil</td><td>9–14 %</td><td>±10–15 %</td></tr>
+        <tr><td>Emissionsfaktoren (Flottenmix, Tempo, Stau)</td><td>Pkw 150–200, Lkw 700–900 g/km</td><td>±15–20 %</td></tr>
+        <tr><td>Rampen / Abbieger</td><td>30.000–70.000 Kfz/Tag</td><td>±5–10 %</td></tr>
+        <tr><td>Streckenabgrenzung</td><td>1,5 km bis 5 km je Achse</td><td>Faktor 1 bis über 3</td></tr>
+        <tr><td>Vorkette (Well-to-Wheel)</td><td>0 bis +20 %</td><td>nur wenn beim Kraftwerk auch Vorkette</td></tr>
+      </tbody>
+    </table></div>
+    <p class="hint">Die größte Stellschraube ist die Systemgrenze. Deshalb ist sie in dieser Anwendung fest benannt (1,5 km) und in der Tabelle „Annahmen“ sichtbar änderbar.</p>
+  </div>
+
+  <div class="tabpane" id="t3">
+    <p>Die Aussage <b>„188.000 t entsprechen etwa dem 4-Fachen des Frankfurter Kreuzes“</b> ist rechnerisch gut belegbar, solange klar ist, dass der <b>1,5-km-Kernbereich</b> gemeint ist. Eine abgewogene Bewertung:</p>
+    <div class="cols">
+      <div class="box pro"><h5>Was den Vergleich trägt</h5><ul>
+        <li>Gleiche Einheit: Tonnen CO₂ pro Jahr, direkte Emissionen auf beiden Seiten.</li>
+        <li>Die Verkehrsmengen stammen aus amtlichen Zählungen (Hessen Mobil / BASt).</li>
+        <li>Das Frankfurter Kreuz ist bekannt und anschaulich. Es macht eine abstrakte Zahl greifbar.</li>
+        <li>Auch mit der hohen Annahme bleibt das <span class="gk">Gaskraftwerk</span> deutlich über einem Kernbereich (mehr als 3-fach).</li>
+      </ul></div>
+      <div class="box con"><h5>Wo der Vergleich hinkt</h5><ul>
+        <li><b>Punktquelle vs. Netz:</b> Das Kraftwerk ist eine einzelne, stationäre Quelle. Das Kreuz ist ein kleiner Ausschnitt eines Straßennetzes. Der Verkehr fährt vorher und nachher weiter.</li>
+        <li><b>Systemgrenze:</b> Mit 5 km je Achse statt 1,5 km würde das Verhältnis auf etwa 1,4× schrumpfen. Ohne Nennung der 1,5 km wirkt die Aussage größer, als sie ist.</li>
+        <li><b>Nutzen:</b> Das Kraftwerk erzeugt Strom und ggf. Wärme, das Kreuz ermöglicht Mobilität. Beides wird hier nicht bewertet, nur das CO₂.</li>
+        <li><b>Betriebsstunden:</b> Die 188.000 t hängen von den angenommenen Volllaststunden ab. Läuft die Anlage seltener (z. B. als Reserve), sinkt der Wert.</li>
+        <li><b>Vorkette:</b> Methanverluste bei Förderung und Transport von Erdgas sowie die Raffinerie-Emissionen von Kraftstoff sind auf beiden Seiten nicht enthalten.</li>
+      </ul></div>
+    </div>
+    <div class="fazit">Fazit: „Das geplante <span class="gk">Gaskraftwerk</span> stößt etwa so viel CO₂ aus wie vier 1,5-km-Kernbereiche des Frankfurter Kreuzes (Bandbreite rund 3- bis 6-fach)“ ist eine faire, belegbare Formulierung. Die verkürzte Fassung „4× Frankfurter Kreuz“ sollte immer mit dem Hinweis auf den Kernbereich verwendet werden.</div>
+  </div>
+
+  <div class="tabpane" id="t4">
+    <p>Zur Einordnung der Kraftwerkszahl (eigene Überschlagsrechnung, kein amtlicher Wert):</p>
+    <ul>
+      <li>Erdgas setzt bei der Verbrennung rund <b>56 t CO₂ je Terajoule</b> frei, also etwa <b>0,20 t CO₂ je MWh</b> Brennstoffenergie (Größenordnung laut UBA-Emissionsfaktoren für Brennstoffe).</li>
+      <li>Aktueller Wert <b id="t4t"></b> entspricht damit rund <b id="t4fuel"></b> Erdgaseinsatz pro Jahr.</li>
+      <li>Bei 40 bis 58 % elektrischem Wirkungsgrad (Gasturbine bis GuD) ergibt das etwa <b id="t4el"></b> Strom pro Jahr.</li>
+    </ul>
+    <p class="hint">Die 188.000 t sind die Angabe für das geplante Vorhaben. Wer die tatsächlichen Betriebsstunden und den Anlagentyp kennt, kann den Regler oben entsprechend einstellen.</p>
+  </div>
+</section>
+
+</main>
+
+<!-- Silhouette Schlüchtern -->
+<div class="silhouette" aria-hidden="true">
+<svg viewBox="0 0 1440 200" preserveAspectRatio="xMidYMax slice">
+  <path d="M0 120 C 160 70, 300 80, 420 110 S 700 60, 860 95 S 1150 55, 1300 90 S 1440 80, 1440 80 V200 H0Z" fill="#cfe5c3"/>
+  <path d="M0 150 C 200 110, 340 130, 520 140 S 820 110, 980 135 S 1260 115, 1440 130 V200 H0Z" fill="#9ccc80"/>
+  <!-- Stadt -->
+  <g fill="#1E5A2B">
+    <!-- Häuser links -->
+    <path d="M520 160 v-18 l12 -10 l12 10 v18z M548 160 v-24 l14 -12 l14 12 v24z M580 160 v-16 l10 -9 l10 9 v16z"/>
+    <!-- Stadtkirche mit Spitzhelm -->
+    <rect x="612" y="108" width="20" height="52"/>
+    <path d="M610 110 L622 52 L634 110Z"/>
+    <rect x="620" y="44" width="4" height="10"/><rect x="616" y="47" width="12" height="2.5"/>
+    <path d="M632 160 v-28 l26 -16 l26 16 v28z"/>
+    <!-- Häuser Mitte -->
+    <path d="M690 160 v-20 l12 -10 l12 10 v20z M718 160 v-14 l9 -8 l9 8 v14z"/>
+    <!-- Kloster Schlüchtern: Kirchenschiff + zwei Türme -->
+    <path d="M746 160 v-34 h96 v34z"/>
+    <path d="M744 128 l50 -20 l50 20z"/>
+    <rect x="760" y="92" width="18" height="40"/>
+    <path d="M758 94 l11 -26 l11 26z"/>
+    <rect x="812" y="84" width="20" height="48"/>
+    <path d="M810 86 l12 -14 l12 14z"/>
+    <rect x="819" y="64" width="6" height="10"/>
+    <path d="M818 66 l4 -10 l4 10z"/>
+    <!-- Klostergebäude -->
+    <path d="M842 160 v-26 h60 v26z M840 136 l32 -14 l32 14z"/>
+    <!-- Häuser rechts -->
+    <path d="M908 160 v-18 l12 -10 l12 10 v18z M936 160 v-22 l13 -11 l13 11 v22z M966 160 v-14 l9 -8 l9 8 v14z"/>
+  </g>
+  <g fill="#D7F0C8" opacity=".85">
+    <rect x="620" y="118" width="4" height="8" rx="2"/><rect x="766" y="104" width="5" height="8" rx="2.5"/><rect x="819" y="96" width="5" height="9" rx="2.5"/>
+    <circle cx="794" cy="140" r="5"/>
+  </g>
+  <!-- Bäume -->
+  <g fill="#2f7a3f">
+    <circle cx="470" cy="150" r="12"/><circle cx="492" cy="146" r="15"/><circle cx="1010" cy="148" r="14"/><circle cx="1034" cy="152" r="11"/>
+    <circle cx="210" cy="140" r="10"/><circle cx="1220" cy="134" r="12"/>
+  </g>
+  <path d="M0 165 C 300 150, 600 172, 900 160 S 1300 150, 1440 162 V200 H0Z" fill="#1E5A2B"/>
+  <path d="M0 178 C 360 168, 720 186, 1080 174 S 1380 172, 1440 176" fill="none" stroke="#6DB33F" stroke-width="3" opacity=".7"/>
+</svg>
+</div>
+<div class="sil-cap">Schlüchtern im Kinzigtal · Stilisierte Silhouette mit Stadtkirche und Kloster Schlüchtern</div>
+
+<!-- Fußleiste -->
+<footer class="fuss" id="fuss">
+  <div class="fuss-panel" id="fpanel">
+    <div class="fuss-inner">
+      <div>
+        <h4>Rechenweg (aktuelle Einstellung, Szenario <span id="fScn">mittel</span>)</h4>
+        <div class="formula" id="fFormula"></div>
+        <p class="hint">Alle Werte direkt aus den Eingaben oben. Rundung erst bei der Anzeige. „SV“ = Schwerverkehr (Lkw &gt; 3,5 t und Busse), „LNF“ = leichte Nutzfahrzeuge, „EF“ = Emissionsfaktor (CO₂ am Auspuff, Tank-to-Wheel, sofern Vorkette nicht aktiviert).</p>
+      </div>
+      <div>
+        <h4>Quellen</h4>
+        <ol class="srcs">
+          <li><b>Hessen Mobil</b>, Straßen- und Verkehrsmanagement: <a href="https://mobil.hessen.de" target="_blank" rel="noopener">https://mobil.hessen.de</a><br>Verkehrszahlen 2018 (Zählwerte 2015), Abschnitte A3 AS Flughafen – AK Frankfurter Kreuz (128.877 Kfz/24h, 17.891 SV), AK Frankfurter Kreuz – AS Frankfurt-Süd (141.450 / 18.099), A5 AS Niederrad – AK Frankfurter Kreuz (156.428 / 13.945), AK Frankfurter Kreuz – AS Zeppelinheim (143.785 / 14.506):<br><a href="https://mobil.hessen.de/sites/mobil.hessen.de/files/2022-02/hmo_verkehrszahlen_2018_a_0.pdf" target="_blank" rel="noopener">hmo_verkehrszahlen_2018_a_0.pdf</a></li>
+          <li><b>Bundesanstalt für Straßenwesen (BASt)</b>, automatische Dauerzählstellen und bundesweite Straßenverkehrszählung (Definition DTV, SV-Anteile): <a href="https://www.bast.de" target="_blank" rel="noopener">https://www.bast.de</a></li>
+          <li><b>Umweltbundesamt (UBA) / HBEFA</b>, Handbuch für Emissionsfaktoren des Straßenverkehrs (aktuell Version 5.1, Okt. 2025) und Emissionsdaten Verkehr: <a href="https://www.umweltbundesamt.de" target="_blank" rel="noopener">https://www.umweltbundesamt.de</a><br><a href="https://www.umweltbundesamt.de/themen/hbefa-51-emissionsdatenbank-des-strassenverkehres" target="_blank" rel="noopener">HBEFA 5.1</a> · <a href="https://www.umweltbundesamt.de/themen/verkehr/emissionsdaten" target="_blank" rel="noopener">Emissionsdaten Verkehr</a></li>
+        </ol>
+        <h4>Was ist Schätzung?</h4>
+        <p class="hint" style="margin:0">Gemessen: DTV und SV-Anteil je Abschnitt (Hessen Mobil). <b>Geschätzt:</b> Abbieger-Volumen und Rampenlänge, Emissionsfaktoren als gerundete Spannen (die HBEFA-Datenbank ist lizenzpflichtig, Einzelwerte werden daher nicht zitiert), Vorkettenzuschlag, Erdgas-Umrechnung in Tab 4. Kraftwerkswert 188.000 t: Projektangabe.</p>
+      </div>
+    </div>
+  </div>
+  <div class="fuss-bar">
+    <div class="f-sum" id="fSum"></div>
+    <button class="ftoggle" id="ftog" aria-expanded="false" aria-controls="fpanel">ⓘ Rechenweg &amp; Quellen einblenden</button>
+  </div>
+</footer>
+
+<script>
+(function(){
+const BASE = 188000;
+const nf0 = new Intl.NumberFormat('de-DE',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1});
+const $ = id => document.getElementById(id);
+
+// Parameter: [key, label, quelle, low, mid, high, step, unit]
+const PARAMS = [
+  ['dtvA3','DTV A3 (Kfz/Tag)','Hessen Mobil 2015: Ø 135.164',125000,135000,145000,1000],
+  ['dtvA5','DTV A5 (Kfz/Tag)','Hessen Mobil 2015: Ø 150.107',140000,150000,160000,1000],
+  ['sv','Schwerverkehrsanteil (%)','Hessen Mobil 2015: gewichtet 11,3 %',9,11.3,13.5,0.1],
+  ['len','Streckenlänge je Achse (km)','Systemgrenze Kernbereich',1.5,1.5,1.5,0.1],
+  ['ramp','Abbieger über Rampen (Kfz/Tag)','Schätzung',30000,50000,70000,1000],
+  ['rlen','Ø Rampenlänge im Kernbereich (km)','Schätzung',0.6,0.8,1.0,0.1],
+  ['efLV','EF Pkw/LNF (g CO₂/km)','an HBEFA angelehnt',150,175,200,1],
+  ['efSV','EF Lkw/Bus (g CO₂/km)','an HBEFA angelehnt',700,800,900,1]
+];
+const SC = ['low','mid','high'];
+const SCN = {low:'niedrig',mid:'mittel',high:'hoch'};
+const SCNLONG = {low:'Niedrige Annahme',mid:'Mittlere Annahme',high:'Hohe Annahme'};
+let vals = {}; function defaults(){ SC.forEach((s,i)=>{ vals[s]={}; PARAMS.forEach(p=>vals[s][p[0]]=p[3+i]); }); }
+defaults();
+const MIN=141000, MAX=400000; let kwT = BASE, pct = 0, scn = 'mid';
+let res = {};
+
+// Tabelle aufbauen
+const tb = document.querySelector('#ann tbody');
+function buildTable(){
+  tb.innerHTML = PARAMS.map(p=>`<tr><td>${p[1]}<span class="src">${p[2]}</span></td>`+
+    SC.map(s=>`<td><input type="number" inputmode="decimal" step="${p[6]}" data-s="${s}" data-k="${p[0]}" value="${vals[s][p[0]]}" aria-label="${p[1]} ${SCN[s]}"></td>`).join('')+'</tr>').join('');
+}
+buildTable();
+tb.addEventListener('input',e=>{ const t=e.target; if(t.dataset.k){ const v=parseFloat(t.value); if(!isNaN(v)&&v>=0){ vals[t.dataset.s][t.dataset.k]=v; update(); } } });
+$('annReset').onclick=()=>{ defaults(); buildTable(); $('wtw').checked=false; $('wtwPct').value=20; update(); };
+$('wtw').onchange=update; $('wtwPct').oninput=update;
+
+function calc(v, lenOverride){
+  const len = lenOverride ?? v.len;
+  const vkmAx = (v.dtvA3 + v.dtvA5) * len;
+  const vkmR = v.ramp * v.rlen;
+  const vkm = vkmAx + vkmR;
+  const sv = v.sv/100;
+  let ef = (1-sv)*v.efLV + sv*v.efSV;
+  const wtw = $('wtw').checked ? (parseFloat($('wtwPct').value)||0)/100 : 0;
+  const efTot = ef*(1+wtw);
+  const t = vkm*365*efTot/1e6;
+  return {vkmAx,vkmR,vkm,ef,efTot,wtw,t,sv,len};
+}
+
+// Kreuz-Icon
+const KREUZ = (c1,c2)=>`<svg viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="12" fill="${c1}"/>
+<g fill="none" stroke="${c2}" stroke-width="4.5" stroke-linecap="round"><path d="M32 6 V58"/><path d="M6 32 H58"/></g>
+<g fill="none" stroke="${c2}" stroke-width="2.6" opacity=".9"><path d="M36 28 C 47 28 47 17 36 17"/><path d="M28 36 C 17 36 17 47 28 47"/><path d="M36 36 C 47 36 47 47 36 47"/><path d="M28 28 C 17 28 17 17 28 17"/></g></svg>`;
+const ICON_ON = KREUZ('#1E5A2B','#ffffff'), ICON_OFF = KREUZ('#e6ece5','#b9c4bb');
+
+function renderIcons(r, box=$('icons'), hint=$('iconHint')){ const n = Math.ceil(r - 1e-9);
+  const size = n<=8?58: n<=12?48: n<=18?38:30;
+  box.style.setProperty('--s',size+'px');
+  const cur = box.querySelectorAll('.ic');
+  // Anzahl anpassen
+  for(let i=cur.length;i<n;i++){ const d=document.createElement('div'); d.className='ic'; d.style.animationDelay=(i-cur.length)*40+'ms'; d.innerHTML=ICON_OFF+`<div class="fillwrap">${ICON_ON}</div>`; box.appendChild(d); }
+  for(let i=cur.length-1;i>=n;i--) cur[i].remove();
+  box.querySelectorAll('.ic').forEach((d,i)=>{
+    const f = Math.max(0,Math.min(1,r-i));
+    d.querySelector('.fillwrap').style.width = (f*100)+'%';
+    d.title = f<1 ? `${nf0.format(f*100)} % eines Kernbereichs` : '1 Kernbereich Frankfurter Kreuz';
+  });
+  const full = Math.floor(r+1e-9), part = r-full;
+  hint.textContent = part>0.02 ? `${full} volle Symbole + ${nf0.format(part*100)} % eines weiteren · 1 Symbol = 1 Kernbereich (1,5 km) ≈ ${nf0.format(res[scn].t)} t CO₂/Jahr` : `${full} volle Symbole · 1 Symbol = 1 Kernbereich (1,5 km) ≈ ${nf0.format(res[scn].t)} t CO₂/Jahr`;
+}
+
+// animierte Zahlen
+const anim = {};
+function tween(el, to, fmt, key){
+  const from = anim[key]?.v ?? to; cancelAnimationFrame(anim[key]?.raf);
+  const t0 = performance.now(), d=380;
+  const step = now=>{ const p=Math.min(1,(now-t0)/d), e=1-Math.pow(1-p,3); const v=from+(to-from)*e; anim[key].v=v; el.innerHTML=fmt(v); if(p<1) anim[key].raf=requestAnimationFrame(step); };
+  anim[key]={v:from}; anim[key].raf=requestAnimationFrame(step);
+}
+
+function update(){
+  SC.forEach(s=>res[s]=calc(vals[s]));
+  const kw = kwT; pct = Math.round((kwT/BASE-1)*100);
+  const r = {}; SC.forEach(s=>r[s]=kw/res[s].t);
+
+  // Kraftwerk
+  tween($('kwT'), kw, v=>nf0.format(Math.round(v/100)*100), 'kw');
+  const d=$('kwD'); d.textContent = (pct>0?'+':pct<0?'−':'±')+Math.abs(pct)+' % ggü. 188.000 t'; d.className='delta '+(pct>0?'plus':pct<0?'minus':'');
+  const fillPct=(kwT-MIN)/(MAX-MIN); const fillCss=`calc(14px + (100% - 28px) * ${fillPct})`;
+  $('slider').value=kwT; $('slider').style.setProperty('--fill', fillCss);
+  document.querySelectorAll('#presets .chip').forEach(b=>b.classList.toggle('on', +b.dataset.t===kwT));
+
+  // Ergebnis
+  tween($('fac'), r[scn], v=>nf1.format(v)+'<small>×</small>', 'fac');
+  $('scnName').textContent = SCN[scn];
+  renderIcons(r[scn]);
+
+  // Band
+  const lo = Math.min(r.low,r.mid,r.high), hi = Math.max(r.low,r.mid,r.high);
+  const max = Math.max(4, Math.ceil(hi*1.15/2)*2);
+  const pos = x=> (x/max*100)+'%';
+  $('bRange').style.left=pos(lo); $('bRange').style.width=((hi-lo)/max*100)+'%';
+  $('bMark').style.left=pos(r[scn]); $('bMarkL').textContent=nf1.format(r[scn])+'×';
+  const stepT = max<=10?1: max<=20?2:5; let ticks='';
+  for(let x=0;x<=max;x+=stepT) ticks+=`<span style="left:${x/max*100}%">${x}×</span>`;
+  $('bTicks').innerHTML=ticks;
+  $('bLegend').innerHTML = SC.map(s=>`<button class="bl ${s===scn?'on':''}" data-s="${s}"><i>${SCNLONG[s]}</i><b>${nf1.format(r[s])}×</b><i>Kernbereich ≈ ${nf0.format(res[s].t)} t/Jahr</i></button>`).join('');
+
+  // Tabelle Summen
+  SC.forEach(s=>{ $('vkm-'+s).textContent=nf0.format(res[s].vkm); $('ef-'+s).textContent=nf0.format(res[s].efTot); $('e-'+s).textContent=nf0.format(res[s].t); });
+
+  // Tabs dynamisch
+  $('t1mid').textContent = 'rund '+nf0.format(Math.round(res.mid.t/1000)*1000)+' t';
+  const five = calc(vals.mid,5).t;
+  $('t1five').textContent = 'rund '+nf0.format(Math.round(five/1000)*1000)+' t CO₂ pro Jahr';
+  $('t2range').textContent = 'zwischen '+nf1.format(lo)+' und '+nf1.format(hi);
+  const fuelMWh = kw/0.2016; // 56 t/TJ = 0,2016 t/MWh
+  $('t4t').textContent = nf0.format(kw)+' t CO₂';
+  $('t4fuel').textContent = nf0.format(Math.round(fuelMWh/1000))+' GWh';
+  $('t4el').textContent = nf0.format(Math.round(fuelMWh*0.40/1000/10)*10)+' bis '+nf0.format(Math.round(fuelMWh*0.58/1000/10)*10)+' GWh';
+
+  // Karte
+  $('mapT').textContent='≈ '+nf0.format(Math.round(res[scn].t/1000)*1000)+' t'; $('mapScn').textContent=SCN[scn];
+
+  // Einfache Ansicht (immer mittlere Annahme)
+  tween($('sT'), kw, v=>nf0.format(Math.round(v/100)*100), 'skw');
+  const sd=$('sD'); sd.textContent=d.textContent; sd.className=d.className;
+  $('sSlider').value=kwT; $('sSlider').style.setProperty('--fill', fillCss);
+  document.querySelectorAll('#sPresets .chip').forEach(b=>b.classList.toggle('on', +b.dataset.t===kwT));
+  tween($('sFac'), r.mid, v=>nf1.format(v)+'<small>×</small>', 'sfac');
+  renderIcons(r.mid, $('sIcons'), {set textContent(x){}});
+  $('sBand').innerHTML = `1 Symbol ≈ ${nf0.format(res.mid.t)} t CO₂/Jahr · Bandbreite je nach Annahme: <b>${nf1.format(lo)}× bis ${nf1.format(hi)}×</b>`;
+
+  // Fußleiste
+  const c = res[scn], v = vals[scn];
+  $('fScn').textContent = SCN[scn];
+  $('fFormula').innerHTML =
+`<b>1) Fahrleistung Hauptachsen</b>
+   (DTV A3 ${nf0.format(v.dtvA3)} + DTV A5 ${nf0.format(v.dtvA5)}) Kfz/Tag × ${nf1.format(v.len)} km
+   = ${nf0.format(c.vkmAx)} Fahrzeug-km/Tag
+<b>2) Fahrleistung Rampen</b>
+   ${nf0.format(v.ramp)} Kfz/Tag × ${nf1.format(v.rlen)} km = ${nf0.format(c.vkmR)} Fahrzeug-km/Tag
+<b>3) Mittlerer Emissionsfaktor</b>
+   (1 − ${nf1.format(v.sv)} %) × ${nf0.format(v.efLV)} g + ${nf1.format(v.sv)} % × ${nf0.format(v.efSV)} g = ${nf1.format(c.ef)} g CO₂/km${c.wtw?`
+   × (1 + ${nf0.format(c.wtw*100)} % Vorkette) = ${nf1.format(c.efTot)} g CO₂/km`:''}
+<b>4) Jahresemission Kernbereich</b>
+   ${nf0.format(c.vkm)} Fahrzeug-km/Tag × 365 × ${nf1.format(c.efTot)} g ÷ 1.000.000
+   = <b>${nf0.format(c.t)} t CO₂/Jahr</b>
+<b>5) Vergleich</b>
+   <span style="color:#CD281E;font-weight:800">Gaskraftwerk</span> ${nf0.format(kw)} t ÷ ${nf0.format(c.t)} t = <b>${nf1.format(r[scn])} × Frankfurter Kreuz (1,5-km-Kernbereich)</b>`;
+  $('fSum').innerHTML = `<b>${nf0.format(kw)} t</b> ÷ <b>${nf0.format(c.t)} t</b> (Kernbereich 1,5 km, ${SCN[scn]}) = <b>${nf1.format(r[scn])}×</b> · Bandbreite ${nf1.format(lo)}–${nf1.format(hi)}×`;
+}
+
+// Events
+$('sSlider').addEventListener('input',e=>{ kwT=+e.target.value; update(); });
+$('sPresets').addEventListener('click',e=>{ const b=e.target.closest('[data-t]'); if(b){ kwT=+b.dataset.t; update(); } });
+$('sDetails').onclick=()=>{ if(!$('fuss').classList.contains('open')) $('ftog').click(); };
+// Ansicht umschalten
+function setView(v, scroll){ document.body.classList.toggle('simple', v==='simple');
+  document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  try{ localStorage.setItem('co2view',v); }catch(e){}
+  history.replaceState(null,'',v==='detail'?'#detail':location.pathname+location.search);
+  if(v==='detail'){ playFly(); } if(scroll) window.scrollTo({top:0,behavior:'smooth'}); }
+$('viewSeg').addEventListener('click',e=>{ const b=e.target.closest('[data-v]'); if(b) setView(b.dataset.v,true); });
+$('sToDetail').onclick=()=>setView('detail',true);
+// Flugansicht
+const fly=$('fly');
+function playFly(){ fly.classList.remove('tilt','playing'); void fly.offsetWidth; fly.classList.add('playing');
+  document.querySelectorAll('#flyBtns button').forEach(b=>b.classList.toggle('on',b.dataset.f==='fly')); }
+$('flyBtns').addEventListener('click',e=>{ const b=e.target.closest('[data-f]'); if(!b) return;
+  if(b.dataset.f==='fly') playFly(); else { fly.classList.remove('playing','tilt'); }
+  document.querySelectorAll('#flyBtns button').forEach(x=>x.classList.toggle('on',x===b)); });
+fly.addEventListener('animationend',()=>{ fly.classList.remove('playing'); fly.classList.add('tilt'); });
+$('carsOn').onchange=e=>fly.classList.toggle('nocars',!e.target.checked);
+if('IntersectionObserver' in window){ let done=false; new IntersectionObserver(es=>{ if(!done && es[0].isIntersecting && !document.body.classList.contains('simple')){ done=true; playFly(); } },{threshold:.4}).observe(fly); }
+let v0='simple'; try{ v0=localStorage.getItem('co2view')||'simple'; }catch(e){}
+if(location.hash==='#detail'||location.hash==='#karte') v0='detail';
+document.body.classList.toggle('simple', v0==='simple');
+document.querySelectorAll('#viewSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===v0));
+$('slider').addEventListener('input',e=>{ kwT=+e.target.value; update(); });
+$('presets').addEventListener('click',e=>{ const b=e.target.closest('[data-t]'); if(b){ kwT=+b.dataset.t; update(); } });
+$('reset').onclick=()=>{ kwT=BASE; update(); };
+function setScn(s){ scn=s; document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.s===s)); update(); }
+document.querySelector('.seg').addEventListener('click',e=>{ const b=e.target.closest('[data-s]'); if(b) setScn(b.dataset.s); });
+$('bLegend').addEventListener('click',e=>{ const b=e.target.closest('[data-s]'); if(b) setScn(b.dataset.s); });
+document.querySelector('.tabs').addEventListener('click',e=>{ const b=e.target.closest('[data-t]'); if(!b) return;
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id===b.dataset.t)); });
+$('ftog').onclick=()=>{ const f=$('fuss'); const o=f.classList.toggle('open'); $('ftog').setAttribute('aria-expanded',o);
+  $('ftog').innerHTML = o ? '✕ Rechenweg &amp; Quellen ausblenden' : 'ⓘ Rechenweg &amp; Quellen einblenden'; };
+
+update();
+})();
+</script>
+ 
+</body>
+</html>
