@@ -93,6 +93,6 @@ DTV steht für den durchschnittlichen täglichen Verkehr (Fahrzeuge in 24 Stunde
 
 ## Hinweis
 
-Dieses Projekt entsteht privat und ehrenamtlich. Es soll eine sachliche Diskussion unterstützen. Für Hinweise auf Fehler oder bessere Datenquellen sind wir dankbar.
+Dieses Projekt ist ein Prototyp. Es soll eine sachliche Diskussion unterstützen. Für Hinweise auf Fehler oder bessere Datenquellen gerne einen PullRequest machen.
 
 Stand: November 2026
