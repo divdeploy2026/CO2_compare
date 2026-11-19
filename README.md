@@ -6,7 +6,7 @@ Die Seite ist kein amtliches Gutachten und keine wissenschaftliche Studie. Sie i
 
 ## Öffnen
 
-Die Datei `co2-vergleich-frankfurter-kreuz.html` herunterladen und mit einem Browser öffnen. Es ist keine Installation nötig, und die Seite funktioniert auch ohne Internet. Ohne Internet fällt nur die Schriftart Inter auf eine Systemschrift zurück.
+Die Datei `index.html` herunterladen und mit einem Browser öffnen. Es ist keine Installation nötig, und die Seite funktioniert auch ohne Internet. Ohne Internet fällt nur die Schriftart Inter auf eine Systemschrift zurück.
 
 ## Was die Seite zeigt
 
